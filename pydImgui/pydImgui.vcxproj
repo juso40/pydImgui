@@ -263,6 +263,10 @@
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\LICENSE" />
+    <None Include="..\licenses\imgui" />
+    <None Include="..\licenses\kiero" />
+    <None Include="..\licenses\minhook" />
     <None Include="..\README.md" />
     <None Include="setup.py" />
   </ItemGroup>

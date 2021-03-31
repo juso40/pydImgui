@@ -52,6 +52,9 @@
     <Filter Include="Source Files\kiero\minhook\src\hde">
       <UniqueIdentifier>{e3eff1c3-628c-404a-bf4d-b8b953e65589}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\licenses">
+      <UniqueIdentifier>{a9d4acac-b8fe-428c-938f-3e35ce4d56a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pybind11\attr.h">
@@ -234,6 +237,18 @@
     </None>
     <None Include="..\README.md">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\LICENSE">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\licenses\imgui">
+      <Filter>Resource Files\licenses</Filter>
+    </None>
+    <None Include="..\licenses\kiero">
+      <Filter>Resource Files\licenses</Filter>
+    </None>
+    <None Include="..\licenses\minhook">
+      <Filter>Resource Files\licenses</Filter>
     </None>
   </ItemGroup>
 </Project>
