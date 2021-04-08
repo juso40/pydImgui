@@ -77,7 +77,7 @@ void InitImGui(LPDIRECT3DDEVICE9 pDevice)
 		ImGui::CreateContext();
 	//ImGuiIO& io = ImGui::GetIO();
 	//io.ConfigFlags = ImGuiConfigFlags_NoMouseCursorChange;
-	ImGui_ImplWin32_Init(window);
+	ImGui_ImplWin32_Init(GetProcessWindow());
 	ImGui_ImplDX9_Init(pDevice);
 
 	ImGui::SetNextWindowSize(ImVec2(640, 440), ImGuiCond_FirstUseEver);
@@ -85,10 +85,8 @@ void InitImGui(LPDIRECT3DDEVICE9 pDevice)
 
 // Declare the detour function
 bool init = false;
-bool showImgui = false;
 long __stdcall hkEndScene(LPDIRECT3DDEVICE9  pDevice)
 {
-	auto ret = oEndScene(pDevice);
 
 	if (!init)
 	{
@@ -96,18 +94,21 @@ long __stdcall hkEndScene(LPDIRECT3DDEVICE9  pDevice)
 		init = true;
 	}
 
-	if (showImgui)
-	{
-		ImGui_ImplDX9_NewFrame();
-		ImGui_ImplWin32_NewFrame();
 
-		endScenePyCallback();
-
-		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
-	}
+	ImGui_ImplDX9_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 
 
-	return ret;
+	endScenePyCallback();
+
+	ImGui::EndFrame();
+	ImGui::Render();
+	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+
+
+
+	return oEndScene(pDevice);
 }
 
 
@@ -180,9 +181,6 @@ PYBIND11_MODULE(pyd_imgui, pyd_imgui)
 
 	pyd_imgui.def("d3d9_hook_init", &d3d9HookInit);
 	pyd_imgui.def("toggle_wnd_proc", &toggleWndProc);
-	pyd_imgui.def("toggle_imgui", []() {showImgui = !showImgui; return showImgui; });
-
-
 
 
 	py::class_<ImGuiContext>(pyd_imgui, "Context");

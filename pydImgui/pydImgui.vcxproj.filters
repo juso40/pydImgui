@@ -171,17 +171,17 @@
     <ClInclude Include="kiero\minhook\src\buffer.h">
       <Filter>Header Files\kiero\minhook\src</Filter>
     </ClInclude>
-    <ClInclude Include="kiero\minhook\include\MinHook.h">
-      <Filter>Header Files\kiero\minhook\src</Filter>
-    </ClInclude>
     <ClInclude Include="kiero\minhook\src\trampoline.h">
       <Filter>Header Files\kiero\minhook\src</Filter>
     </ClInclude>
-    <ClInclude Include="kiero\kiero.h">
-      <Filter>Header Files\kiero\minhook\include</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kiero\minhook\include\MinHook.h">
+      <Filter>Header Files\kiero\minhook\include</Filter>
+    </ClInclude>
+    <ClInclude Include="kiero\kiero.h">
+      <Filter>Header Files\kiero</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

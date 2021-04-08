@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define KIERO_VERSION "1.2.10"
+#define KIERO_VERSION "1.2.12"
 
 #define KIERO_INCLUDE_D3D9   1 // 1 if you need D3D9 hook
 #define KIERO_INCLUDE_D3D10  0 // 1 if you need D3D10 hook
@@ -30,9 +30,12 @@ typedef uint64_t uint150_t;
 typedef uint32_t uint150_t;
 #endif
 
-namespace kiero {
-	struct Status {
-		enum Enum {
+namespace kiero
+{
+	struct Status
+	{
+		enum Enum
+		{
 			UnknownError = -1,
 			NotSupportedError = -2,
 			ModuleNotFoundError = -3,
@@ -44,8 +47,10 @@ namespace kiero {
 		};
 	};
 
-	struct RenderType {
-		enum Enum {
+	struct RenderType
+	{
+		enum Enum
+		{
 			None,
 
 			D3D9,
