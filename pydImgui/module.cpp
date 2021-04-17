@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <iostream>
 
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -7,11 +8,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 // Create the type of function that we will hook
 typedef LRESULT(CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
 typedef long(__stdcall* EndScene)(LPDIRECT3DDEVICE9);
-typedef HRESULT(__stdcall* Reset)(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters);
-
-
 EndScene oEndScene = NULL;
+typedef long(__stdcall* Reset)(LPDIRECT3DDEVICE9, D3DPRESENT_PARAMETERS*);
 Reset oReset = NULL;
+
+
 WNDPROC oWndProc;
 static HWND window = NULL;
 bool hookWndProc = false;
@@ -28,7 +29,7 @@ bool toggleWndProc()
 }
 
 
-LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK hkWindowProc(_In_ HWND   hWnd, _In_ UINT   uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -49,6 +50,16 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 }
 
+HMODULE GetCurrentModule()
+{ // NB: XP+ solution!
+	HMODULE hModule = NULL;
+	GetModuleHandleEx(
+		GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+		(LPCTSTR)GetCurrentModule,
+		&hModule);
+
+	return hModule;
+}
 
 
 BOOL CALLBACK EnumWindowsCallback(HWND handle, LPARAM lParam)
@@ -71,84 +82,84 @@ HWND GetProcessWindow()
 }
 
 
-void InitImGui(LPDIRECT3DDEVICE9 pDevice)
+bool bCallPython = false;
+long __stdcall hkEndScene(LPDIRECT3DDEVICE9 pDevice)
 {
-	if (!ImGui::GetCurrentContext())
-		ImGui::CreateContext();
-	//ImGuiIO& io = ImGui::GetIO();
-	//io.ConfigFlags = ImGuiConfigFlags_NoMouseCursorChange;
-	ImGui_ImplWin32_Init(GetProcessWindow());
-	ImGui_ImplDX9_Init(pDevice);
-
-	ImGui::SetNextWindowSize(ImVec2(640, 440), ImGuiCond_FirstUseEver);
-}
-
-// Declare the detour function
-bool init = false;
-long __stdcall hkEndScene(LPDIRECT3DDEVICE9  pDevice)
-{
+	static bool init = false;
 
 	if (!init)
 	{
-		InitImGui(pDevice);
+		D3DDEVICE_CREATION_PARAMETERS params;
+		pDevice->GetCreationParameters(&params);
+
+		oWndProc = (WNDPROC)::SetWindowLongPtr((HWND)params.hFocusWindow, GWLP_WNDPROC, (LONG)hkWindowProc);
+
+		ImGui::CreateContext();
+		ImGui_ImplWin32_Init(params.hFocusWindow);
+		ImGui_ImplDX9_Init(pDevice);
+
 		init = true;
 	}
-
 
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-
-	endScenePyCallback();
+	if (bCallPython)
+		endScenePyCallback();
 
 	ImGui::EndFrame();
 	ImGui::Render();
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-
-
 	return oEndScene(pDevice);
 }
 
 
-HRESULT __stdcall hkReset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters)
+long __stdcall hkReset(LPDIRECT3DDEVICE9 pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
-	if (init)
+	ImGui_ImplDX9_InvalidateDeviceObjects();
+	long result = oReset(pDevice, pPresentationParameters);
+	ImGui_ImplDX9_CreateDeviceObjects();
+
+	return result;
+}
+
+
+int hookInternal()
+{
+
+	/*
+	AllocConsole();
+	freopen("CONIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	*/
+
+	while (GetModuleHandleA("d3d9.dll") == 0)
 	{
-		ImGui_ImplDX9_InvalidateDeviceObjects();
-		ImGui::DestroyContext();
-	}
-	HRESULT hr = oReset(pDevice, pPresentationParameters);
-	if (init)
-	{
-		ImGui::CreateContext();
-		ImGui_ImplDX9_CreateDeviceObjects();
+		std::cout << "Searching for dx9" << std::endl;
+		Sleep(100);
 	}
 
-	return hr;
+	if (kiero::init(kiero::RenderType::Auto) != kiero::Status::Success)
+	{
+		std::cout << "Something went wrong!" << std::endl;
+		return 0;
+	}
+
+	std::cout << kiero::bind(42, (void**)&oEndScene, hkEndScene) << std::endl;
+	std::cout << kiero::bind(16, (void**)&oReset, hkReset) << std::endl;
+
+	return 1;
 }
 
 bool d3d9HookInit(py::object f)
 {
 
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)hookInternal, NULL, 0, NULL);
+	endScenePyCallback = f;
 
-	if (kiero::init(kiero::RenderType::D3D9) == kiero::Status::Success)
-	{
-		oEndScene = (EndScene)kiero::getMethodsTable()[42];
-		oReset = (Reset)kiero::getMethodsTable()[16];
-		kiero::bind(42, (void**)&oEndScene, hkEndScene);
-		kiero::bind(16, (void**)&oReset, hkReset);
-
-		do
-			window = GetProcessWindow();
-		while (window == NULL);
-		oWndProc = (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)WndProc);
-
-		endScenePyCallback = f;
-		return true;
-	}
-	return false;
+	return true;
 }
 
 
@@ -181,6 +192,7 @@ PYBIND11_MODULE(pyd_imgui, pyd_imgui)
 
 	pyd_imgui.def("d3d9_hook_init", &d3d9HookInit);
 	pyd_imgui.def("toggle_wnd_proc", &toggleWndProc);
+	pyd_imgui.def("toggle_imgui", []() {bCallPython = !bCallPython; return bCallPython; });
 
 
 	py::class_<ImGuiContext>(pyd_imgui, "Context");
