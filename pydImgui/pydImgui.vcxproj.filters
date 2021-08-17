@@ -55,6 +55,9 @@
     <Filter Include="Resource Files\licenses">
       <UniqueIdentifier>{a9d4acac-b8fe-428c-938f-3e35ce4d56a3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\pybind11\stl">
+      <UniqueIdentifier>{b1141395-89c4-4bf9-a1f4-e755f1c90a0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pybind11\attr.h">
@@ -183,6 +186,9 @@
     <ClInclude Include="kiero\kiero.h">
       <Filter>Header Files\kiero</Filter>
     </ClInclude>
+    <ClInclude Include="pybind11\stl\filesystem.h">
+      <Filter>Header Files\pybind11\stl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module.cpp">
@@ -248,6 +254,9 @@
       <Filter>Resource Files\licenses</Filter>
     </None>
     <None Include="..\licenses\minhook">
+      <Filter>Resource Files\licenses</Filter>
+    </None>
+    <None Include="..\licenses\pybind11">
       <Filter>Resource Files\licenses</Filter>
     </None>
   </ItemGroup>
